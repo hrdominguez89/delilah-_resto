@@ -8,14 +8,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/hrdominguez89/delilah-_resto.git"
+        "url": "git+https://github.com/hrdominguez89/delilah-resto.git"
     },
     "author": "Héctor Ricardo Domínguez",
     "license": "ISC",
     "bugs": {
         "url": "https://github.com/hrdominguez89/delilah-resto/issues"
     },
-    "homepage": "https://github.com/hrdominguez89/delilah_resto#readme",
+    "homepage": "https://github.com/hrdominguez89/delilah-resto/blob/master/README.md",
     "dependencies": {
         "bcrypt": "^5.0.0",
         "body-parser": "^1.19.0",
