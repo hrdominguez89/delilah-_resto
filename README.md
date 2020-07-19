@@ -24,7 +24,7 @@ por ultimo iremos a  https://editor.swagger.io/ e importaremos el archivo delila
 
 ## Ejecutando las pruebas ⚙️
 
-para comenzar a correr el servidor ejecutarmos el comando "node index"
+para comenzar a correr el servidor ejecutamos desde la consola posicionados en la carpeta de la api el comando "node index"
 
 La base de datos ya cuenta con un usuario administrador aqui te dejo las credenciales
 
