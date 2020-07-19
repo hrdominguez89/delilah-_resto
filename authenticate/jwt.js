@@ -6,21 +6,13 @@ const getToken = (data) => {
     return token;
 }
 
-const authenticateUser = (request, response, next) => {
-    try {
-        const token = request.headers.authorization.split(' ')[1];
-        const tokenDecoded = jwt.verify(token, configJWT.secretWordJWT);
-        if (tokenDecoded) {
-            next();
-        } else {
-            throw new Error({
-                Error: "Usuario no autenticado",
-            })
-        }
-    } catch (error) {
-        response.status(401).json({
-            "error": error,
-        })
+const authenticateUser = (request) => {
+    const token = request.headers.authorization.split(' ')[1];
+    const tokenDecoded = jwt.verify(token, configJWT.secretWordJWT);
+    if (tokenDecoded) {
+        return tokenDecoded;
+    } else {
+        return false;
     }
 }
 

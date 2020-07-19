@@ -3,10 +3,18 @@ const { sequelize } = require("../config/config");
 module.exports = {
 
     async getUsers() {
-        const users = await sequelize.query("SELECT * FROM users", {
+        const users = await sequelize.query("SELECT id,username,nameAndLastname,email,phone,address,isAdmin,dateCreated,dateModified FROM users", {
             type: sequelize.QueryTypes.SELECT
         });
         return users;
+    },
+    async getUserById(idUser) {
+        const user = await sequelize.query("SELECT id,username,nameAndLastname,email,phone,address,isAdmin,dateCreated,dateModified FROM users WHERE id=:id", {
+            replacements: { id: idUser },
+            type: sequelize.QueryTypes.SELECT
+        });
+        console.log(user);
+        return user;
     },
 
     async findUser(columnName, valueToSearch) {
@@ -23,5 +31,17 @@ module.exports = {
             replacements: { username: username, password: password, nameAndLastname: nameAndLastname, phone: phone, address: address, email: email }
         });
         return userInserted;
+    },
+
+    async modifyUser(userData) {
+        const userModified = await sequelize.query('UPDATE users SET username=:username,password=:password,nameAndLastName=:nameAndLastname,email=:email,phone=:phone,address=:address,isAdmin=:isAdmin WHERE id=:id', {
+            replacements: { username: username }
+        });
+    },
+
+    async deleteUserById(userId) {
+        await sequelize.query("DELETE FROM users WHERE id=:id", {
+            replacements: { id: userId }
+        });
     }
 }
