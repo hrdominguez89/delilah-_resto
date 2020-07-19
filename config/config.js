@@ -1,11 +1,13 @@
+// MODIFICAR ESTOS DATOS SOLO SI ES NECESARIO
+
 const { Sequelize } = require("sequelize");
 //Configuracion de base de datos
 const configDataBase = {
-    userDB: "root",
-    passwordDB: "",
-    hostDB: "localhost",
-    portDB: "3306",
-    dataBase: "delilah"
+    userDB: "root", //  USUARIO DE NUESTRA BD
+    passwordDB: "", //  PASSWORD DE NUESTRA BD
+    hostDB: "localhost", //  DIRECCION DE NUESTRA BD
+    portDB: "3306", //  PUERTO DE NUESTRA BD
+    dataBase: "delilah" //  NOMBRE DE NUESTRA BD
 }
 
 const sequelize = new Sequelize(`mysql://${configDataBase.userDB}:${configDataBase.passwordDB}@${configDataBase.hostDB}:${configDataBase.portDB}/${configDataBase.dataBase}`);
@@ -13,13 +15,13 @@ const sequelize = new Sequelize(`mysql://${configDataBase.userDB}:${configDataBa
 //Configuracion JWT
 
 const configJWT = {
-    secretWordJWT: "JaVa$cRiPt",
+    secretWordJWT: "JaVa$cRiPt", //  PALABRA CLAVE DE JSONWEBTOKEN
 }
 
 //Configuracion Server
 
 const configServer = {
-    port: process.env.PORT || 3000
+    port: process.env.PORT || 3000 //  CONFIGURACION DEL PUERTO DE NUESTRO PROYECTO
 }
 
 module.exports = { sequelize, configJWT, configServer };
