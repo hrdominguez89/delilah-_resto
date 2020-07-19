@@ -7,38 +7,44 @@ saltRounds = 10;
 module.exports = {
     async registerUser(request, response) {
         if (await findExistentUser(request.body, response)) {
-            request.body.password = encryptPassword(request.body.password);
-            try {
-                const userRegistered = await usersModel.registerUser(request.body);
-                if (userRegistered[0]) {
-                    response.status(201).json({
-                        "mensaje": "La cuenta fue creada con exito"
+            if (validateUserDataRegister(request.body, response)) {
+                request.body.password = encryptPassword(request.body.password);
+                try {
+                    const userRegistered = await usersModel.registerUser(request.body);
+                    if (userRegistered[0]) {
+                        response.status(201).json({
+                            "mensaje": "La cuenta fue creada con exito"
+                        });
+                    } else {
+                        throw new Error("No se pudo registrar el usuario, por favor intente nuevamente");
+                    }
+                } catch (error) {
+                    response.status(409).json({
+                        "Error": error
                     });
-                } else {
-                    throw new Error("No se pudo registrar el usuario, por favor intente nuevamente");
                 }
-            } catch (error) {
-                response.status(409).json({
-                    "Error": error.mensaje
-                });
             }
         }
     },
 
     async login(request, response) {
         const { username, password } = request.body;
-        userData = await usersModel.findUser("username", username);
-        if (!userData[0] || !comparePassword(password, userData[0].password)) {
-            response.status(404).json({
-                "Mensaje": "Usuario y/o password incorrectos"
-            });
-        } else {
-            delete userData[0].password;
-            const token = jwt.getToken(userData[0]);
-            response.status(200).json({
-                "token": token,
-                "userId": userData[0].id
-            });
+        try {
+            userData = await usersModel.findUser("username", username);
+            if (!userData[0] || !comparePassword(password, userData[0].password)) {
+                response.status(404).json({
+                    "Mensaje": "Usuario y/o password incorrectos"
+                });
+            } else {
+                delete userData[0].password;
+                const token = jwt.getToken(userData[0]);
+                response.status(200).json({
+                    "token": token,
+                    "userId": userData[0].id
+                });
+            }
+        } catch (e) {
+            response.status(409).json({ error: e });
         }
     },
 
@@ -92,7 +98,10 @@ module.exports = {
             if (tokenDecoded.isAdmin === 1 || tokenDecoded.id === idUser) {
                 const user = await usersModel.getUserById(idUser);
                 if (user[0]) {
-                    response.status(200).json(user);
+                    if (validateUserDataUpdate(request.body, response)) {
+                        await usersModel.updateUserById(idUser, request.body);
+                        response.status(200).json({ message: "Usuario actualizado correctamente" });
+                    }
                 } else {
                     response.status(404).json({
                         "error": "No se encontro ningun usuario con el id " + idUser
@@ -160,6 +169,53 @@ async function findExistentUser(userData, response) {
     }
     return true
 };
+
+function validateUserDataRegister(userData, response) {
+    const { username, password, nameAndLastname, email, phone, address } = userData;
+    let userDataInvalid = [];
+    if (typeof(username) !== "string" || username === "") {
+        userDataInvalid.push(`Usuario no paso la validación de datos, debe ser de tipo STRING y/o no debe ser un campo vacío`);
+    }
+    if (password == "") {
+        userDataInvalid.push(`Password no paso la validación de datos, y/o no debe ser un campo vacio`)
+    }
+    if (typeof(nameAndLastname) !== "string" || nameAndLastname === "") {
+        userDataInvalid.push(`nameAndLastname no paso la validación de datos, debe ser de tipo STRING y/o no debe ser un campo vacío`);
+    }
+    if (typeof(email) !== "string" || email === "") {
+        userDataInvalid.push(`email no paso la validación de datos, debe ser de tipo STRING y/o no debe ser un campo vacío`);
+    }
+    if (typeof(address) !== "string" || address === "") {
+        userDataInvalid.push(`address no paso la validación de datos, debe ser de tipo STRING y/o no debe ser un campo vacío`);
+    }
+    if (isNaN(parseInt(phone))) {
+        userDataInvalid.push(`phone no paso la validación de datos, debe ser de tipo INTEGER y/o no debe ser un campo vacío`);
+    }
+    if (userDataInvalid.length) {
+        response.status(405).json({ message: userDataInvalid });
+        return false
+    }
+    return true;
+}
+
+function validateUserDataUpdate(userData, response) {
+    const { nameAndLastname, phone, address } = userData;
+    let userDataInvalid = [];
+    if (typeof(nameAndLastname) !== "string" || nameAndLastname === "") {
+        userDataInvalid.push(`nameAndLastname no paso la validación de datos, debe ser de tipo STRING y/o no debe ser un campo vacío`);
+    }
+    if (typeof(address) !== "string" || address === "") {
+        userDataInvalid.push(`address no paso la validación de datos, debe ser de tipo STRING y/o no debe ser un campo vacío`);
+    }
+    if (isNaN(parseInt(phone))) {
+        userDataInvalid.push(`phone no paso la validación de datos, debe ser de tipo INTEGER y/o no debe ser un campo vacío`);
+    }
+    if (userDataInvalid.length) {
+        response.status(405).json({ message: userDataInvalid });
+        return false
+    }
+    return true;
+}
 
 const encryptPassword = (password) => {
     const hash = bcrypt.hashSync(password, saltRounds);

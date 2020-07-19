@@ -13,7 +13,6 @@ module.exports = {
             replacements: { id: idUser },
             type: sequelize.QueryTypes.SELECT
         });
-        console.log(user);
         return user;
     },
 
@@ -33,15 +32,18 @@ module.exports = {
         return userInserted;
     },
 
-    async modifyUser(userData) {
-        const userModified = await sequelize.query('UPDATE users SET username=:username,password=:password,nameAndLastName=:nameAndLastname,email=:email,phone=:phone,address=:address,isAdmin=:isAdmin WHERE id=:id', {
-            replacements: { username: username }
-        });
-    },
-
     async deleteUserById(userId) {
-        await sequelize.query("DELETE FROM users WHERE id=:id", {
+        const deletedUser = await sequelize.query("DELETE FROM users WHERE id=:id", {
             replacements: { id: userId }
         });
+        return deletedUser;
+    },
+
+    async updateUserById(userId, userData) {
+        const { nameAndLastname, phone, address } = userData;
+        const userUpdated = await sequelize.query("UPDATE users SET nameAndLastname = :nameAndLastname, phone = :phone, address = :address, dateModified = current_timestamp() WHERE id = :userId", {
+            replacements: { nameAndLastname: nameAndLastname, phone: phone, address: address, userId: userId }
+        })
+        return userUpdated;
     }
 }

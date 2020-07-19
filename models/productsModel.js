@@ -3,7 +3,6 @@ const { sequelize } = require("../config/config");
 module.exports = {
     async registerProduct(dataProduct) {
         const { title, price, image } = dataProduct;
-        console.log(dataProduct);
         const productRegistered = await sequelize.query("INSERT INTO products (title, price, image, dateCreated, dateModified) VALUES (:title,:price,:image,current_timestamp(),current_timestamp())", {
             replacements: { title: title, price: price, image: image }
         });
@@ -34,7 +33,7 @@ module.exports = {
 
     async updateProductById(idProduct, dataProduct) {
         const { title, price, image } = dataProduct
-        const productUpdated = await sequelize.query("UPDATE products SET title = :title, price = :price, image = :image WHERE id = :idProduct", {
+        const productUpdated = await sequelize.query("UPDATE products SET title = :title, price = :price, image = :image, dateModified = current_timestamp() WHERE id = :idProduct", {
             replacements: { title: title, price: price, image: image, idProduct: idProduct }
         })
         return productUpdated;

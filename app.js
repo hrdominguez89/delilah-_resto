@@ -10,6 +10,11 @@ const app = express();
 //Globals Middlewares 
 app.use(bodyParser.json());
 app.use(cors());
+app.use((err, req, res, next) => {
+    if (!err) return next();
+    console.log('Error, algo salio mal', err);
+    res.status(500).send('Error');
+});
 
 //Middlewares
 app.isBearerAuth = (request, response, next) => {

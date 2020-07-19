@@ -1,0 +1,1098 @@
+openapi: 3.0.0
+
+info:
+  title: Delilah Restó API REST
+  description: API de pedidos de comida de un restaurante.
+  contact:
+    name: Héctor Ricardo Domínguez
+    email: hrdominguez89@gmail.com
+  version: 1.0.0
+  
+servers:
+  - url: 'http://localhost:3000'
+    description: Servidor Local
+    
+tags:
+- name: Clientes
+  description: "Acciones que pueden realizar los clientes"
+- name: Administradores
+  description: "Acciones que pueden realizar solo los administradores"
+
+paths:
+
+  /users:
+    post:  
+      tags:
+      - "Clientes"
+      summary: "Registro de usuarios"
+      description: Si el <b>USERNAME</b> o el <b>EMAIL</b>, <b>NO EXISTEN</b> se registra el usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                nameAndLastname:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: integer
+                address:
+                  type: string
+              required:
+                - username
+                - password
+                - nameAndLastname
+                - email
+                - phone
+                - address
+            example:
+              username: "juanperez"
+              password: "password123"
+              nameAndLastname: "Juan Perez"
+              email: "juanperez@example.com"
+              phone: 55559999
+              address: "Rivadavia 5555"
+      
+      responses:
+      
+        '201':
+          description: "Usuario registrado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      mensaje:
+                        type: string
+                    
+        '405':
+          description: "Los datos enviados no pasaron la verificación de tipos de datos requeridos."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+        '409':
+          description: "No se pudo crear"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                      
+    get: 
+      tags:
+      - "Administradores"
+      summary: "Obtiene un listado de todos los usuarios"
+      security: 
+        - JsonWebToken: []
+      responses:
+      
+        '200':
+          description: "Éxito"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Clientes'
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+    
+  /users/login: 
+    post:
+      tags:
+      - "Clientes"
+      summary: "Login de usuario"
+      description: Si el usuario existe y coincide la password devuelve un token para que pueda ser usado por toda la API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+              required:
+                - username
+                - password
+            example:
+              username: "juanperez"
+              password: "password123"
+              
+      responses:
+      
+        '200':
+          description: "Usuario logueado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      token:
+                        type: string
+                      userId:
+                        type: integer
+                    
+        '404':
+          description: "Usuario y/o password incorrectos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+  
+  /users/{id}:
+    get:
+      tags:
+      - "Administradores"
+      - "Clientes"
+      description: "Si el cliente tiene el mismo id que consulta se muestran los datos, caso contrario se arroja error no tiene permisos, el administrador puede ver todos los usuarios"
+      summary: "Obtener usuario por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de usuario"
+              
+      responses:
+      
+        '200':
+          description: Usuario registrado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Clientes'
+                    
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+        '404':
+          description: "No se encontro el usuario indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clientes'
+                  
+    put:
+      tags:
+      - "Administradores"
+      - "Clientes"
+      summary: "Editar usuario por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de usuario"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nameAndLastname:
+                  type: string
+                phone:
+                  type: integer
+                address:
+                  type: string
+              required:
+                - nameAndLastname
+                - phone
+                - address
+            example:
+              nameAndLastname: "Juan Perez"
+              phone: 55559999
+              address: "Rivadavia 5555"        
+      responses:
+      
+        '204':
+          description: Usuario Editado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      message:
+                        type: string
+                        
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '404':
+          description: "No se encontro el usuario indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+        '405':
+          description: "Los datos enviados no pasaron la verificación de datos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+        '409':
+          description: "No se pudo editar"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                      
+    delete:
+      tags:
+      - "Administradores"
+      summary: "Eliminar usuario por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de usuario"
+              
+      responses:
+      
+        '204':
+          description: Usuario Eliminado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      message:
+                        type: string
+                        
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '404':
+          description: "No se encontro el usuario indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+  /products:
+    post:  
+      tags:
+      - "Administradores"
+      summary: "Registro de productos"
+      security:
+        - JsonWebToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                price:
+                  type: integer
+                image:
+                  type: string
+              required:
+                - title
+                - price
+                - image
+            example:
+              title: "Hamburguesa Completa"
+              price: 300
+              image: "http://lorempixel.com/400/200/food/"
+      
+      responses:
+      
+        '201':
+          description: "Producto registrado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      mensaje:
+                        type: string
+                    
+        '405':
+          description: "Los datos enviados no pasaron la verificación de tipos de datos requeridos."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+        '409':
+          description: "No se pudo crear"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                      
+    get: 
+      tags:
+      - "Administradores"
+      - "Clientes"
+      summary: "Obtiene un listado de todos los productos"
+      responses:
+      
+        '200':
+          description: "Éxito"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Productos'
+  
+  /products/{id}:
+    get:
+      tags:
+      - "Administradores"
+      - "Clientes"
+      summary: "Obtener producto por ID"
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de producto"
+              
+      responses:
+      
+        '200':
+          description: "Éxito"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Productos'
+                    
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+        '404':
+          description: "No se encontro el producto indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+    put:
+      tags:
+      - "Administradores"
+      summary: "Editar producto por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de usuario"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                price:
+                  type: integer
+                image:
+                  type: string
+            example:
+              title: "Hamburguesa Completa"
+              price: 300
+              image: "http://lorempixel.com/400/200/food/"      
+      responses:
+      
+        '204':
+          description: "Producto editado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      message:
+                        type: string
+                        
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '404':
+          description: "No se encontro el producto indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        '405':
+          description: "La información enviada no paso la verificación de datos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+        '409':
+          description: "No se pudo editar"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                      
+    delete:
+      tags:
+      - "Administradores"
+      summary: "Eliminar producto por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de producto"
+              
+      responses:
+      
+        '204':
+          description: "Producto eliminado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      message:
+                        type: string
+                        
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '404':
+          description: "No se encontro el producto indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+  
+
+  /orders:
+    post:  
+      tags:
+      - "Clientes"
+      summary: "Registro de ordenes"
+      description: "Codificación:<br>1 - Tarjeta<br>2 - Efectivo"
+      security:
+        - JsonWebToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: array
+                  items:
+                    type: integer
+                idPaymentMethod:
+                  type: integer
+                  enum:
+                    - 1
+                    - 2
+              required:
+                - description
+                - idPaymentMethod
+            example:
+              idProducts: [1,2,3]
+              idPaymentMethod: 1
+      responses:
+      
+        '201':
+          description: "Orden registrada"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      mensaje:
+                        type: string
+                        
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+          
+        
+        '409':
+          description: "No se pudo crear"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                     
+        
+    get:  
+      tags:
+      - "Administradores"
+      - "Clientes"
+      summary: "Obtener listado de ordenes"
+      description: "Si es administrador trae todas las ordenes, si no solo trae sus propias ordenes"
+      security:
+        - JsonWebToken: []
+      responses:
+      
+        '200':
+          description: "Éxito"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Ordenes'
+                        
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+
+          
+    
+  /orders/{id}:
+    get:
+      tags:
+      - "Administradores"
+      - "Clientes"
+      summary: "Obtener orden por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de orden"
+              
+      responses:
+      
+        '200':
+          description: "Éxito"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Ordenes'
+                    
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+        '404':
+          description: "No se encontro el pedido indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                  
+    patch:
+      tags:
+      - "Administradores"
+      summary: "Editar ordenes por ID"
+      description: "Codificacion de estados<br>1 - Nuevo<br>2 - Confirmado<br>3 - Preprando<br>4 - Enviando<br>5 - Entregado<br>6 - Cancelado"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de orden"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idState:
+                  type: integer
+                  enum:
+                    - 1 #Nuevo
+                    - 2 #Confirmado
+                    - 3 #Preparando
+                    - 4 #Enviando
+                    - 5 #Entregado
+                    - 6 #Cancelado
+            example:
+              idState: 1
+      responses:
+      
+        '204':
+          description: "Producto editado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      message:
+                        type: string
+                        
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '404':
+          description: "No se encontro el producto indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+        
+        '409':
+          description: "No se pudo editar"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+                      
+    delete:
+      tags:
+      - "Administradores"
+      summary: "Eliminar producto por ID"
+      security:
+        - JsonWebToken: []
+      parameters: 
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "ID de producto"
+              
+      responses:
+      
+        '204':
+          description: "Pedido eliminado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    properties:
+                      message:
+                        type: string
+                        
+        '400':
+          description: "Parametro enviado NO VALIDO"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '401':
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+          
+        '403':
+          description: "Usuario sin permisos"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+
+        '404':
+          description: "No se encontro el producto indicado"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Errores'
+    
+components:
+  schemas:
+    Clientes:
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        nameAndLastname:
+          type: string
+        email:
+          type: string
+        phone:
+          type: integer
+        address:
+          type: string
+        isAdmin:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        dateModified:
+          type: string
+          format: date-time
+        
+    Productos:
+       properties:
+        id:
+          type: integer
+        title:
+          type: string
+        price:
+          type: integer
+        image:
+          type: string
+        isFavorite:
+          type: boolean
+        dateCreated:
+          type: string
+          format: date-time
+        dateModified:
+          type: string
+          format: date-time
+    Ordenes:
+     properties:
+        id:
+          type: integer
+        idUser:
+          type: integer
+        description:
+          type: array
+          items:
+            type: integer
+        idPaymentMethod:  
+          type: integer
+        idEstate: 
+          type: integer
+        dateCreated:
+          type: string
+          format: date-time
+        dateModified:
+          type: string
+          format: date-time
+    Errores:
+      properties:
+        error:
+          type: string
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+  securitySchemes:
+    JsonWebToken:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
