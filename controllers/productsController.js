@@ -81,10 +81,10 @@ module.exports = {
             const idProduct = request.params.id;
             const product = await productsModel.getProductById(idProduct);
             if (product) {
-                if (verifyProductData()) {
+                if (verifyProductData(request.body, response)) {
                     try {
                         const productUpdated = await productsModel.updateProductById(idProduct, request.body);
-                        response.status(204).json({ Message: "Producto editado con éxito" });
+                        response.status(200).json({ Message: "Producto editado con éxito" });
                     } catch (e) {
                         response.status(409).json({ error: "No se pudo editar, por favor intente nuevamente" });
                     }
